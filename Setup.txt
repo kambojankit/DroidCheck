@@ -6,3 +6,12 @@ To download the bening apk files, refer http://www.addictivetips.com/android/dow
 
   or Racoon (http://www.onyxbits.de/raccoon) 
       downloadable from the same link  http://www.onyxbits.de/raccoon
+
+
+
+====================================
+Dynamic analysis:
+  Droidbox: http://blog.dornea.nu/2014/08/05/android-dynamic-code-analysis-mastering-droidbox
+  
+Other tools list
+  https://mobilesecuritywiki.com/
