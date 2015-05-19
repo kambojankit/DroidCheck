@@ -1,32 +1,36 @@
 package com.techarha.android.security.droidcheck;
 
+import com.techarha.android.security.droidcheck.analyser.StaticAnalyser;
+
 import java.io.File;
 import java.io.IOException;
 
 /**
+ * INPUT:
+ *      APK_FILE_PATH: should be the path where apks and apkList.txt is stored. apks folder will contain all the sample apks,
+ *      and apkList.txt will contain the names of all the collected samples.
+ *
+ *      BASE_PATH: The path where android sdk is stored.
+ *      VERSION: version of the build tools to use, use any of the ones installed on the system.
+ *      SDK_FILE_PATH: represents the full path of the 'aapt' tool.
+ *
+ *      RESULT_PATH: The path to output Results of analysis.
+ *
  * Created by ankit on 15/05/15.
  */
 public class Runner {
+    //PATH TO APKs
+    final static String APK_FILE_PATH = "/Developer/android-security/android-apks/";
 
-    final static String[] apkNameList = {"SampleProject.apk"};
+    //ANDROID SDK PATHS
+    final static String BASE_PATH = "/Developer/android-sdk/";
+    final static String VERSION = "18.0.1";
+    final static String SDK_FILE_PATH = BASE_PATH+"sdk/build-tools/"+VERSION;
 
-    final static String BASE_PATH_WIN = "";
-    final static String BASE_PATH_MAC = "/Developer/android-sdk/";
-
-    final static String SDK_FILE_PATH_MAC = BASE_PATH_MAC+"sdk/build-tools/18.0.1";
-
-    final static String APK_FILE_PATH = "/Developer/Android-apks/";
+    //ANALYSIS OUTPUT PATHS
+    final static String RESULT_PATH = "/Developer/android-security/results/static/";
 
     public static void main(String[] args) {
-
-        String command = "./aapt dump permissions "+APK_FILE_PATH+apkNameList[0];
-
-        System.out.println(command);
-
-        try {
-            System.out.println(Runtime.getRuntime().exec(command, null, new File(SDK_FILE_PATH_MAC)));
-        } catch (IOException e) {
-            System.out.println("An Exception has occurred." + e);
-        }
+        new StaticAnalyser().analysePermissions(SDK_FILE_PATH,RESULT_PATH,APK_FILE_PATH);
     }
 }
