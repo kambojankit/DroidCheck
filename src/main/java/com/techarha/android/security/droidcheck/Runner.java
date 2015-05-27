@@ -7,8 +7,8 @@ import java.io.IOException;
 
 /**
  * INPUT:
- *      APK_FILE_PATH: should be the path where apks and apkList.txt is stored. apks folder will contain all the sample apks,
- *      and apkList.txt will contain the names of all the collected samples.
+ *      APK_FILE_PATH: should be the path where directories benign and malicious are created, which in turn contain directory apks and text file apkList.txt.
+ *      apks folder will contain all the sample apks, and apkList.txt will contain the names of all the collected samples.
  *
  *      BASE_PATH: The path where android sdk is stored.
  *      VERSION: version of the build tools to use, use any of the ones installed on the system.
@@ -28,7 +28,7 @@ public class Runner {
     final static String SDK_FILE_PATH = BASE_PATH+"sdk/build-tools/"+VERSION;
 
     //ANALYSIS OUTPUT PATHS
-    final static String RESULT_PATH = "/Developer/android-security/results/static/";
+    final static String RESULT_PATH = "/Developer/android-security/results/";
 
     public static void main(String[] args) {
         new StaticAnalyser().analysePermissions(SDK_FILE_PATH,RESULT_PATH,APK_FILE_PATH);
