@@ -1,1 +1,0 @@
-http://www.researchgate.net/publication/257934801_System_Calls_Analysis_of_Malwares_on_Android
