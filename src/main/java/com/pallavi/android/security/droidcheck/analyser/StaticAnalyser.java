@@ -32,13 +32,18 @@ public class StaticAnalyser {
 
         printDataToFile(env, benignAndroidDataList, false);
 
+        printDataToSingleFile(env, benignAndroidDataList, false);
+
+        //Malicious
         List<AndroidSample> maliciousSamples = FileUtils.fetchMaliciousSamples(env);
 
         List<StaticAndroidData> maliciousAndroidDataList = extractSamplingData(env, maliciousSamples, true);
 
-        map.put("malicious", benignAndroidDataList);
+        map.put("malicious", maliciousAndroidDataList);
 
         printDataToFile(env, maliciousAndroidDataList, true);
+
+        printDataToSingleFile(env, maliciousAndroidDataList, true);
 
         return map;
     }
@@ -67,6 +72,56 @@ public class StaticAnalyser {
             try {
                 if (br != null) br.close();
                 if (brt != null) brt.close();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+//
+    }
+
+    private void printDataToSingleFile(EnvironmentVariables env, List<StaticAndroidData> androidDataList, boolean isMaliciousList) {
+        BufferedWriter br = null;
+
+        String resPath = env.getResultPath() + "WEKA/" + (isMaliciousList ? "malicious/" : "benign/");
+
+//        isMaliciousList ? "malicious/" : "benign/"
+
+        final File parent = new File(resPath);
+
+        if (!parent.exists()) {
+            parent.mkdirs();
+        }
+
+        try {
+            br = new BufferedWriter(new FileWriter(new File(parent, "PERMISSION_LIST.csv")));
+            String heading = new String("permission_count, Permission_name, isMalware") + "\n";
+            br.write(heading);
+            for (StaticAndroidData data : androidDataList) {
+                String row = new String("");
+                String permissions = "";
+                int size = data.getPermissions().size();
+
+                for(String perm : data.getPermissions()){
+                    String[] permName = perm.split("\\.");
+                    int arrLen = permName.length;
+                    permissions = permissions + permName[arrLen-1]+",";
+                }
+                if(permissions.length()>1){
+                    permissions ="\""+ permissions.substring(0,permissions.length()-1) +"\"";
+                }
+
+                String isMalware = isMaliciousList ? "yes" : "no";
+
+                row = row + size + "," + permissions+"," + isMalware + "\n";
+
+                br.write(row);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (br != null) br.close();
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
