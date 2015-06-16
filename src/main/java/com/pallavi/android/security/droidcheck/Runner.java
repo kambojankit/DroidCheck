@@ -27,8 +27,8 @@ public class Runner {
         EnvironmentVariables env = EnvironmentVariables.prepareEnvironment();
 
         DynamicAnalyser dynamicAnalyser = new DynamicAnalyser();
-        dynamicAnalyser.createAVD(env);
-        dynamicAnalyser.prepareAndStartEmulator(env);
+//        dynamicAnalyser.createAVD(env);
+//        dynamicAnalyser.prepareAndStartEmulator(env);
 
         try {
             System.out.println("Making Thread Sleep, till emulator is up");
@@ -39,6 +39,6 @@ public class Runner {
 
         Map<String, List<StaticAndroidData>> staticAnalysisMap = new StaticAnalyser().analyse(env);
 
-        dynamicAnalyser.analyse(env, staticAnalysisMap);
+//        dynamicAnalyser.analyse(env, staticAnalysisMap);
     }
 }

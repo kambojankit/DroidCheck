@@ -4,13 +4,7 @@ import com.pallavi.android.security.droidcheck.domain.AndroidSample;
 import com.pallavi.android.security.droidcheck.domain.StaticAndroidData;
 import com.pallavi.android.security.droidcheck.utils.EnvironmentVariables;
 import com.pallavi.android.security.droidcheck.utils.FileUtils;
-import com.sun.tools.javac.comp.Env;
-
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
