@@ -32,7 +32,7 @@ public class Runner {
 
         try {
             System.out.println("Making Thread Sleep, till emulator is up");
-            Thread.currentThread().sleep(1000*1*1);
+            Thread.currentThread().sleep(1000*1*5);
         } catch (InterruptedException e) {
             System.out.println("Thread Was Interrupted");
         }

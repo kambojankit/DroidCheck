@@ -21,6 +21,8 @@ import java.util.regex.Pattern;
  */
 public class DynamicAnalyser {
 
+    public static final int WAIT_AFTER_INSTALL = 2 * 60 * 1000;
+    public static final int WAIT_AFTER_REMOVAL = 1 * 40 * 1000;
     private int timeout = 40*000;
 
     public void analyse(EnvironmentVariables env, Map<String, List<StaticAndroidData>> staticDataMap) {
@@ -29,78 +31,17 @@ public class DynamicAnalyser {
         List<StaticAndroidData> benignSampleDataList = staticDataMap.get("benign");
         List<StaticAndroidData> maliciousSampleDataList = staticDataMap.get("malicious");
 
+        analyseMaliciousSamples(env, mDevice, maliciousSampleDataList);
+
         //3. now pick the apk from the apk file path and install it to the device.
-//        for(StaticAndroidData data : benignSampleDataList) {
-//
-//            try {
-//
-//
-//                System.out.println("Starting Now");
-//                //check if app already installed
-////                if()
-//                String deviceAPKPath = mDevice.shell(String.format("adb shell pm path %s", data.getPackageName()), timeout);
-//                System.out.println("Checking if package " + data.getPackageName() + "is already installed");
-//
-//                if (!deviceAPKPath.startsWith("package:")) {
-//                    //application is not installed
-//                    mDevice.installPackage(data.getAndroidSample().getPathToApk());
-//                    System.out.println("Installed Package: " + data.getPackageName());
-//                }
-//
-//                //start activity
-//                String startActivityCommand = "adb shell am start -a android.intent.action.MAIN -n " + data.getPackageName() + "/" + data.getActivityName();
-//                String result = mDevice.shell(startActivityCommand, timeout);
-//                System.out.println("starting activity: " + result);
-//
-//                String processIDCommand = "adb shell ps | grep " + data.getPackageName();
-//                System.out.println("command is: " + processIDCommand);
-//
-//                String outputShell = mDevice.shell(processIDCommand, timeout);
-//                System.out.println("command is: " + outputShell);
-//                String[] str = outputShell.split("\\s+");
-//                String processID = str[1];
-//                System.out.println("Process ID is: " + processID);
-//
-//                //runStrace command on the package and output data to predefined location on disk
-//                String fileName = data.getAndroidSample().getName() + ".txt";
-//                String straceCommand = "adb shell strace -cvf -p " + processID + " -o /sdcard/stracer/benign/" + fileName;
-//                System.out.println("command is: " + straceCommand);
-//
-//                mDevice.shell(straceCommand);
-//
-//                //once activity start, do some work on emulator and then close activity
-//                Thread.currentThread().sleep(15*1000);
-//
-//                //pull the straced data to result path
-//                String pullCommand = "adb pull /sdcard/stracer/benign/" + fileName + " " + env.getResultPath() + "dynamic/strace/benign/" + fileName;
-//                System.out.println(pullCommand);
-////                mDevice.shell(pullCommand, timeout);
-//                Runtime.getRuntime().exec(pullCommand, null, new File(env.getAndroidSDKFilePath()+"platform-tools/"));
-//                System.out.println("pulled file");
-//
-//                //uninstall the app
-//                String forceStopCommand = "adb shell am force-stop " + data.getPackageName();
-//                String stopResult = mDevice.shell(forceStopCommand, timeout);
-//                System.out.println("Stop Result is: " + stopResult);
-//
-//
-//                boolean removeDevice = mDevice.removePackage(data.getAndroidSample().getPathToApk());
-//                System.out.println("Removed: " + removeDevice);
-//
-//                Thread.currentThread().sleep(1000);
-//
-//            } catch (Exception e) {
-//                System.out.println("Exception Occurred: " + e);
-//            }
-//
-//        }
+        analyseBenignSamples(env, mDevice, benignSampleDataList);
 
+        mDevice =null;
+    }
+
+    private void analyseMaliciousSamples(EnvironmentVariables env, IChimpDevice mDevice, List<StaticAndroidData> maliciousSampleDataList) {
         for(StaticAndroidData data : maliciousSampleDataList) {
-
             try {
-
-
-
                 if(!(data.getPackageName()==null || data.getActivityName() == null)){
                     System.out.println("Starting Now");
                     //check if app already installed
@@ -139,7 +80,7 @@ public class DynamicAnalyser {
                     mDevice.shell(straceCommand);
 
                     //once activity start, do some work on emulator and then close activity
-                    Thread.currentThread().sleep(1 * 15 * 1000);
+                    Thread.currentThread().sleep(WAIT_AFTER_INSTALL);
 
                     //pull the straced data to result path
                     String pullCommand = "adb pull /sdcard/stracer/malicious/" + fileName + " " + env.getResultPath() + "dynamic/strace/malicious/" + fileName;
@@ -153,19 +94,79 @@ public class DynamicAnalyser {
                     String stopResult = mDevice.shell(forceStopCommand, timeout);
                     System.out.println("Stop Result is: " + stopResult);
 
-
                     boolean removeDevice = mDevice.removePackage(data.getAndroidSample().getPathToApk());
                     System.out.println("Removed: " + removeDevice);
 
-                    Thread.currentThread().sleep(1000);
+                    Thread.currentThread().sleep(WAIT_AFTER_REMOVAL);
                 }
             } catch (Exception e) {
                 System.out.println("Exception Occurred: " + e);
             }
 
         }
+    }
 
-        mDevice =null;
+    private void analyseBenignSamples(EnvironmentVariables env, IChimpDevice mDevice, List<StaticAndroidData> benignSampleDataList) {
+        for(StaticAndroidData data : benignSampleDataList) {
+            try {
+                System.out.println("Starting Now");
+                //check if app already installed
+//                if()
+                String deviceAPKPath = mDevice.shell(String.format("adb shell pm path %s", data.getPackageName()), timeout);
+                System.out.println("Checking if package " + data.getPackageName() + "is already installed");
+
+                if (!deviceAPKPath.startsWith("package:")) {
+                    //application is not installed
+                    mDevice.installPackage(data.getAndroidSample().getPathToApk());
+                    System.out.println("Installed Package: " + data.getPackageName());
+                }
+
+                //start activity
+                String startActivityCommand = "adb shell am start -a android.intent.action.MAIN -n " + data.getPackageName() + "/" + data.getActivityName();
+                String result = mDevice.shell(startActivityCommand, timeout);
+                System.out.println("starting activity: " + result);
+
+                String processIDCommand = "adb shell ps | grep " + data.getPackageName();
+                System.out.println("command is: " + processIDCommand);
+
+                String outputShell = mDevice.shell(processIDCommand, timeout);
+                System.out.println("command is: " + outputShell);
+                String[] str = outputShell.split("\\s+");
+                String processID = str[1];
+                System.out.println("Process ID is: " + processID);
+
+                //runStrace command on the package and output data to predefined location on disk
+                String fileName = data.getAndroidSample().getName() + ".txt";
+                String straceCommand = "adb shell strace -cvf -p " + processID + " -o /sdcard/stracer/benign/" + fileName;
+                System.out.println("command is: " + straceCommand);
+
+                mDevice.shell(straceCommand);
+
+                //once activity start, do some work on emulator and then close activity
+                Thread.currentThread().sleep(WAIT_AFTER_INSTALL);
+
+                //pull the straced data to result path
+                String pullCommand = "adb pull /sdcard/stracer/benign/" + fileName + " " + env.getResultPath() + "dynamic/strace/benign/" + fileName;
+                System.out.println(pullCommand);
+//                mDevice.shell(pullCommand, timeout);
+                Runtime.getRuntime().exec(pullCommand, null, new File(env.getAndroidSDKFilePath()+"platform-tools/"));
+                System.out.println("pulled file");
+
+                //uninstall the app
+                String forceStopCommand = "adb shell am force-stop " + data.getPackageName();
+                String stopResult = mDevice.shell(forceStopCommand, timeout);
+                System.out.println("Stop Result is: " + stopResult);
+
+
+                boolean removeDevice = mDevice.removePackage(data.getAndroidSample().getPathToApk());
+                System.out.println("Removed: " + removeDevice);
+
+                Thread.currentThread().sleep(WAIT_AFTER_REMOVAL);
+            } catch (Exception e) {
+                System.out.println("Exception Occurred: " + e);
+            }
+
+        }
     }
 
     private IChimpDevice initializeTestingEnvironment(EnvironmentVariables env) {

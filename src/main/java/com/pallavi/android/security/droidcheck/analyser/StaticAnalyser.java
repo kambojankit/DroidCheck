@@ -4,8 +4,13 @@ import com.pallavi.android.security.droidcheck.domain.AndroidSample;
 import com.pallavi.android.security.droidcheck.domain.StaticAndroidData;
 import com.pallavi.android.security.droidcheck.utils.EnvironmentVariables;
 import com.pallavi.android.security.droidcheck.utils.FileUtils;
+import com.sun.tools.javac.comp.Env;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,20 +29,14 @@ public class StaticAnalyser {
 
         resultPath = env.getResultPath() + "static/";
 
-        List<AndroidSample> benignSamples = FileUtils.fetchBenignSamples(env);
 
-        List<StaticAndroidData> benignAndroidDataList = extractSamplingData(env, benignSamples, false);
-
-        map.put("benign", benignAndroidDataList);
-
-        printDataToFile(env, benignAndroidDataList, false);
-
-        printDataToSingleFile(env, benignAndroidDataList, false);
 
         //Malicious
         List<AndroidSample> maliciousSamples = FileUtils.fetchMaliciousSamples(env);
 
         List<StaticAndroidData> maliciousAndroidDataList = extractSamplingData(env, maliciousSamples, true);
+
+        removeAndMoveNullPackageSamples(maliciousAndroidDataList, env);
 
         map.put("malicious", maliciousAndroidDataList);
 
@@ -45,7 +44,49 @@ public class StaticAnalyser {
 
         printDataToSingleFile(env, maliciousAndroidDataList, true);
 
+
+        //benign
+        List<AndroidSample> benignSamples = FileUtils.fetchBenignSamples(env);
+
+        List<StaticAndroidData> benignAndroidDataList = extractSamplingData(env, benignSamples, false);
+
+        removeAndMoveNullPackageSamples(benignAndroidDataList, env);
+
+        map.put("benign", benignAndroidDataList);
+
+        printDataToFile(env, benignAndroidDataList, false);
+
+        printDataToSingleFile(env, benignAndroidDataList, false);
+
         return map;
+    }
+
+    private void removeAndMoveNullPackageSamples(List<StaticAndroidData> staticAndroidDataList, EnvironmentVariables env) {
+        List<StaticAndroidData> removedSamples = new ArrayList<StaticAndroidData>(0);
+        for(StaticAndroidData sample : staticAndroidDataList){
+            if(sample.getPackageName()==null || sample.getPermissions().size()==0){
+                removedSamples.add(sample);
+                BufferedWriter br;
+                String resultData = env.getResultPath()+"/bad_files/apks/";
+                File resultPathTobadData = new File(resultData);
+                if (!resultPathTobadData.exists()) {
+                    resultPathTobadData.mkdirs();
+                }
+                try {
+                    br = new BufferedWriter(new FileWriter(new File(sample.getAndroidSample().getPathToApk())));
+                    String source = sample.getAndroidSample().getPathToApk();
+                    String command = String.format("mv %s %s", source, resultData);
+                    Process proc = Runtime.getRuntime().exec(command);
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }
+
+
+        staticAndroidDataList.removeAll(removedSamples);
     }
 
     private void printDataToFile(EnvironmentVariables env, List<StaticAndroidData> androidDataList, boolean isMaliciousList) {
@@ -134,12 +175,17 @@ public class StaticAnalyser {
 
         BufferedWriter br = null;
         for (AndroidSample sample : sampleList) {
+
             StaticAndroidData staticAndroidData = new StaticAndroidData();
             staticAndroidData.setAndroidSample(sample);
             try {
                 //executePackageCommand(env, staticAndroidData);
                 //executePermissionsCommand(env, staticAndroidData);
                 executeLaunchableCommand(env, staticAndroidData);
+
+                if(staticAndroidData.getPackageName()==null || staticAndroidData.getPermissions().size()==0){
+                    continue;
+                }
 
                 String resPath = env.getResultPath() + "static/" + (isMaliciousList ? "malicious/" : "benign/");
 
