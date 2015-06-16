@@ -36,7 +36,7 @@ public class StaticAnalyser {
 
         List<StaticAndroidData> maliciousAndroidDataList = extractSamplingData(env, maliciousSamples, true);
 
-        removeAndMoveNullPackageSamples(maliciousAndroidDataList, env);
+        removeAndMoveNullPackageSamples(maliciousAndroidDataList, env, true);
 
         map.put("malicious", maliciousAndroidDataList);
 
@@ -50,7 +50,7 @@ public class StaticAnalyser {
 
         List<StaticAndroidData> benignAndroidDataList = extractSamplingData(env, benignSamples, false);
 
-        removeAndMoveNullPackageSamples(benignAndroidDataList, env);
+        removeAndMoveNullPackageSamples(benignAndroidDataList, env, false);
 
         map.put("benign", benignAndroidDataList);
 
@@ -61,13 +61,13 @@ public class StaticAnalyser {
         return map;
     }
 
-    private void removeAndMoveNullPackageSamples(List<StaticAndroidData> staticAndroidDataList, EnvironmentVariables env) {
+    private void removeAndMoveNullPackageSamples(List<StaticAndroidData> staticAndroidDataList, EnvironmentVariables env, boolean isMalicious) {
         List<StaticAndroidData> removedSamples = new ArrayList<StaticAndroidData>(0);
         for(StaticAndroidData sample : staticAndroidDataList){
             if(sample.getPackageName()==null || sample.getPermissions().size()==0){
                 removedSamples.add(sample);
                 BufferedWriter br;
-                String resultData = env.getResultPath()+"/bad_files/apks/";
+                String resultData = env.getResultPath()+"/bad_files/apks/" + (isMalicious ? "malicious/" : "benign/");
                 File resultPathTobadData = new File(resultData);
                 if (!resultPathTobadData.exists()) {
                     resultPathTobadData.mkdirs();
